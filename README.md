@@ -51,19 +51,20 @@ To build the project manually, use:
 npm run build
 ```
 
-🤝 Contributors Welcome!
-We ❤️ contributions! If you'd like to improve ShellMind, feel free to:
+## 🤝 Contributors Welcome!
+**We ❤️ contributions! If you'd like to improve ShellMind, feel free to:**
 
-Fork the repo
-Submit a pull request
-Report issues & suggest features
+**Fork** the repo
+Submit a **pull request**
+Report **issues** & suggest features
 
-📜 License
-MIT License. Free to use, modify, and distribute.
+
+## 📜 License
+ MIT License. Free to use, modify, and distribute.
 
 🔗 Links
-📽 Demo Video: [Video Link](https://youtu.be/F_Wgxqf0kFk)
-📦 NPM Package: ShellMind on NPM
+- 📽 Demo Video: [Video Link](https://youtu.be/F_Wgxqf0kFk)
+- 📦 NPM Package: [ShellMind](https://www.npmjs.com/package/shellmind)
 
 **Developed By**
 Pratham Parikh - @pratham15541
