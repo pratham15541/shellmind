@@ -1,6 +1,6 @@
 {
   "name": "shellmind",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "src/index.js",
   "type": "module",
   "bin": {
@@ -25,8 +25,8 @@
     "chat"
   ],
   "author": "Pratham Parikh",
-  "license": "ISC",
-  "description": "Test Form CLI",
+  "license": "MIT",
+  "description": " ️‍🔥CLI ai based chat application ️‍🔥",
   "dependencies": {
     "@google/generative-ai": "0.21.0",
     "@inquirer/prompts": "7.3.1",
