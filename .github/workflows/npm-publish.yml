@@ -66,7 +66,7 @@ jobs:
 
       - name: Create .env File
         run: |
-          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > dist/.env
+          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > .env
 
       - name: Remove Source Map Files
         run: find dist -name "*.map" -type f -delete
