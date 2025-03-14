@@ -59,7 +59,10 @@ jobs:
           path: dist/
 
       - name: Remove src Folder
-        run: rm -rf src/
+        run: |
+          rm -rf src/
+          rm -rf assets/
+          rm -rf .github/
 
       - name: Create .env File
         run: |
