@@ -58,11 +58,14 @@ jobs:
           name: built-app
           path: dist/
 
+      - name: Remove src Folder
+        run: rm -rf src/
+
       - name: Set Environment Variable
-        run: echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> $GITHUB_ENV
+        run: echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > dist/.env
+
 
       - name: Publish to npm
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
