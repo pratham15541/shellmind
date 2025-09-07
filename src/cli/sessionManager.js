@@ -6,12 +6,15 @@ export async function handleSession(enableSession = false) {
   if (!enableSession) return null; // Skip if session handling is disabled
 
   const sessionDirectory = path.join(process.cwd(), './jsons/sessions');
-  if (!fs.existsSync(sessionDirectory)) fs.mkdirSync(sessionDirectory, { recursive: true });
+  if (!fs.existsSync(sessionDirectory))
+    fs.mkdirSync(sessionDirectory, { recursive: true });
 
-  const sessionFiles = fs.readdirSync(sessionDirectory).filter((file) => file.endsWith('.json'));
+  const sessionFiles = fs
+    .readdirSync(sessionDirectory)
+    .filter((file) => file.endsWith('.json'));
 
   const shouldSelectSession = await confirm({
-    message: 'Would you like to select a previous session or create a new one?',
+    message: 'Would you like to select a previous session?',
     default: true,
   });
 

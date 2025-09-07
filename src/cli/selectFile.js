@@ -53,7 +53,17 @@ export async function selectFile() {
       const editorResponse = await editor({
         message: 'Ask your question about the file:',
       });
-      await askQuestion(`${fileContent}\n${editorResponse}`);
+      
+      // Check if askQuestion is properly initialized
+      try {
+        await askQuestion(`${fileContent}\n${editorResponse}`);
+      } catch (error) {
+        if (error.message.includes('not initialized')) {
+          console.error(chalk.red('❌ AI services are not properly initialized. Please restart the application.'));
+          return null;
+        }
+        throw error; // Re-throw other errors
+      }
       return null;
     } catch (error) {
       console.error(chalk.red('Failed to read file as text:'), error);
@@ -65,6 +75,10 @@ export async function selectFile() {
   try {
     return await uploadFile(filePath, mimeType, fileDisplayName);
   } catch (error) {
+    if (error.message.includes('not initialized')) {
+      console.error(chalk.red('❌ File manager is not properly initialized. Please restart the application.'));
+      return null;
+    }
     console.error(chalk.red('Failed to upload file:'), error);
     return null;
   }

@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Marked } from 'marked';
 import cliHtml from 'cli-html';
-import { env } from '../configs/env.js';
 import ora from 'ora';
 import {
   setChatHistoryFilePath,
@@ -17,18 +16,34 @@ marked.setOptions({
   breaks: true,
 });
 
-const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({
-  model: 'gemini-1.5-flash',
-  systemInstruction,
-  tools: [
-    {
-      codeExecution: {},
-    },
-  ],
-});
+// Initialize these as null - they'll be set when API key is available
+let genAI = null;
+let model = null;
+
+// Function to initialize the AI model with the provided API key
+export function initializeAI(apiKey) {
+  if (!apiKey) {
+    throw new Error('API key is required to initialize the AI model');
+  }
+
+  genAI = new GoogleGenerativeAI(apiKey);
+  model = genAI.getGenerativeModel({
+    model: 'gemini-1.5-flash',
+    systemInstruction,
+    tools: [
+      {
+        codeExecution: {},
+      },
+    ],
+  });
+}
 
 export async function askQuestion(prompt, fileResponse = '', filePath = null) {
+  // Check if AI model is initialized
+  if (!model) {
+    throw new Error('AI model not initialized. Please call initializeAI() with your API key first.');
+  }
+
   console.log('Asking question:', prompt);
 
   const spinner = ora('Generating response...').start();
@@ -72,6 +87,8 @@ export async function askQuestion(prompt, fileResponse = '', filePath = null) {
     // Save updated chat history
     saveChatHistory(chatHistory);
   } catch (error) {
+    spinner.stop();
     console.error('Error while generating content:', error);
+    throw error; // Re-throw so calling code can handle it
   }
 }

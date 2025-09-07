@@ -50,3 +50,12 @@ export const saveChatHistory = (chatHistory) => {
     console.error('Error saving chat history file:', err);
   }
 }
+
+export const clearChatHistory = () => {
+  try {
+    fs.writeFileSync(chatHistoryFilePath, JSON.stringify([]), 'utf-8');
+    console.log('Chat history cleared.');
+  } catch (err) {
+    console.error('Error clearing chat history file:', err);
+  }
+};

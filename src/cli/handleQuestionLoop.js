@@ -3,8 +3,14 @@ import { askQuestion } from '../api/api.js';
 import { selectFile } from './selectFile.js';
 import chalk from 'chalk';
 
-export async function handleQuestionLoop(filePath = null, enableFileSelection = false) {
+export async function handleQuestionLoop(filePath = null, enableFileSelection = false, apiKey = null) {
   let continueAsking = true;
+
+  // Verify API key is provided
+  if (!apiKey) {
+    console.error(chalk.red('❌ No API key provided to handleQuestionLoop. Please restart the application.'));
+    return;
+  }
 
   while (continueAsking) {
     let fileReference = '';
@@ -17,15 +23,38 @@ export async function handleQuestionLoop(filePath = null, enableFileSelection = 
       });
 
       if (useFile) {
-        fileReference = await selectFile();
-        if (!fileReference) {
-          // Retry file selection if it fails
-          continueAsking = await confirm({
-            message: 'Do you want to try again?',
+        try {
+          fileReference = await selectFile();
+          if (!fileReference) {
+            // Retry file selection if it fails
+            continueAsking = await confirm({
+              message: 'Do you want to try again?',
+              default: true,
+            });
+            if (!continueAsking) break;
+            continue;
+          }
+        } catch (error) {
+          if (error.message && error.message.includes('not initialized')) {
+            console.error(chalk.red('❌ Services are not properly initialized. Please restart the application.'));
+            break;
+          }
+          console.error(chalk.red('Error during file selection:'), error);
+          
+          // Ask if user wants to continue without file
+          const continueWithoutFile = await confirm({
+            message: 'File selection failed. Do you want to continue without a file?',
             default: true,
           });
-          if (!continueAsking) break;
-          continue;
+          
+          if (!continueWithoutFile) {
+            continueAsking = await confirm({
+              message: 'Do you want to try again?',
+              default: true,
+            });
+            if (!continueAsking) break;
+            continue;
+          }
         }
       }
     }
@@ -35,16 +64,42 @@ export async function handleQuestionLoop(filePath = null, enableFileSelection = 
       message: 'Ask your question: (Save and close editor to submit)',
     });
 
-    if (!question) {
-      console.log(chalk.red('No question provided. Exiting...'));
-      break;
+    if (!question || question.trim() === '') {
+      console.log(chalk.yellow('⚠️ No question provided.'));
+      
+      // Ask if user wants to try again
+      continueAsking = await confirm({
+        message: 'Do you want to try asking another question?',
+        default: true,
+      });
+      continue;
     }
 
     // Process the Question
     try {
       await askQuestion(question, fileReference, filePath);
     } catch (error) {
-      console.error(chalk.red('Error processing question:'), error);
+      if (error.message && error.message.includes('not initialized')) {
+        console.error(chalk.red('❌ AI services are not properly initialized. Please restart the application.'));
+        break;
+      }
+      
+      console.error(chalk.red('Error processing question:'), error.message || error);
+      
+      // Ask if user wants to try again with the same question
+      const retryQuestion = await confirm({
+        message: 'There was an error processing your question. Do you want to try again?',
+        default: true,
+      });
+      
+      if (retryQuestion) {
+        // Retry the same question
+        try {
+          await askQuestion(question, fileReference, filePath);
+        } catch (retryError) {
+          console.error(chalk.red('Error on retry:'), retryError.message || retryError);
+        }
+      }
     }
 
     // Ask if User Wants to Continue
@@ -54,5 +109,5 @@ export async function handleQuestionLoop(filePath = null, enableFileSelection = 
     });
   }
 
-  console.log(chalk.green('Goodbye!'));
+  console.log(chalk.green('👋 Goodbye!'));
 }

@@ -5,6 +5,8 @@ import path from 'path';
 import readline from 'readline';
 import { handleQuestionLoop } from './handleQuestionLoop.js';
 import { handleSession } from './sessionManager.js';
+import { initializeAI } from '../api/api.js';
+import { initializeFileManager } from '../api/fileManager.js';
 
 const program = new Command();
 
@@ -54,26 +56,40 @@ async function promptAndSaveApiKey() {
 async function getApiKey(forceReset = false) {
   ensureDirectoryExists();
 
-  if (!forceReset && fs.existsSync(CONFIG_PATH)) {
+  // If forced reset, skip file checking and prompt for new key
+  if (forceReset) {
+    console.log(chalk.yellow('🔄 Resetting API key...'));
+    return await promptAndSaveApiKey();
+  }
+
+  // Check if config file exists
+  if (fs.existsSync(CONFIG_PATH)) {
     try {
       const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
+      
+      // Check if API key exists and is not empty
       if (config.apiKey && config.apiKey.trim() !== '') {
         return config.apiKey;
       } else {
-        console.log(chalk.red('❌ API key missing in config file.'));
+        // File exists but API key is missing/empty
+        console.log(chalk.yellow('⚠️ API key not found in existing config file.'));
+        return await promptAndSaveApiKey();
       }
     } catch (err) {
+      // File exists but has invalid JSON
       console.error(chalk.red('❌ Invalid JSON in chatbot-key.json. Recreating file...'));
+      return await promptAndSaveApiKey();
     }
+  } else {
+    // File doesn't exist - first time setup
+    console.log(chalk.blue('🆕 First time setup detected.'));
+    return await promptAndSaveApiKey();
   }
-
-  // If file missing, corrupted, or forced reset → prompt user
-  return await promptAndSaveApiKey();
 }
 
 // CLI setup
 program
-  .version('2.0.9')
+  .version('2.0.10')
   .description('AI Chatbot CLI')
   .option('-f, --file', 'Ask questions from a file')
   .option('-s, --session', 'Start a new session')
@@ -85,6 +101,16 @@ program
 
     // Ensure API key is available
     const apiKey = await getApiKey(options.resetKey);
+
+    // Initialize AI with the API key
+    try {
+      initializeAI(apiKey);
+      initializeFileManager(apiKey);
+      console.log(chalk.green('✅ AI model and file manager initialized successfully!'));
+    } catch (error) {
+      console.error(chalk.red('❌ Failed to initialize AI services:'), error.message);
+      process.exit(1);
+    }
 
     // You can now use `apiKey` in your chatbot
     if (options.session && options.file) {
