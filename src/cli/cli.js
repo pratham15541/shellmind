@@ -73,7 +73,7 @@ async function getApiKey(forceReset = false) {
 
 // CLI setup
 program
-  .version('2.0.8')
+  .version('2.0.9')
   .description('AI Chatbot CLI')
   .option('-f, --file', 'Ask questions from a file')
   .option('-s, --session', 'Start a new session')
