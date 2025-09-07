@@ -34,22 +34,12 @@ function askQuestion(query) {
   );
 }
 
-// Check or request API key
-async function getApiKey() {
-  ensureDirectoryExists();
+// Prompt user for new API key and save
+async function promptAndSaveApiKey() {
+  const apiKey = await askQuestion(
+    chalk.yellow('🔑 Enter your GEMINI API key (or press Enter to exit): ')
+  );
 
-  if (fs.existsSync(CONFIG_PATH)) {
-    try {
-      const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
-      if (config.apiKey) {
-        return config.apiKey;
-      }
-    } catch (err) {
-      console.error(chalk.red('❌ Error reading chatbot-key.json:'), err);
-    }
-  }
-
-  const apiKey = await askQuestion(chalk.yellow('🔑 Enter your GEMINI API key (or press Enter to exit): '));
   if (!apiKey) {
     console.log(chalk.red('❌ No API key provided. Exiting...'));
     process.exit(1);
@@ -60,19 +50,43 @@ async function getApiKey() {
   return apiKey;
 }
 
+// Check or request API key
+async function getApiKey(forceReset = false) {
+  ensureDirectoryExists();
+
+  if (!forceReset && fs.existsSync(CONFIG_PATH)) {
+    try {
+      const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
+      if (config.apiKey && config.apiKey.trim() !== '') {
+        return config.apiKey;
+      } else {
+        console.log(chalk.red('❌ API key missing in config file.'));
+      }
+    } catch (err) {
+      console.error(chalk.red('❌ Invalid JSON in chatbot-key.json. Recreating file...'));
+    }
+  }
+
+  // If file missing, corrupted, or forced reset → prompt user
+  return await promptAndSaveApiKey();
+}
+
+// CLI setup
 program
-  .version('2.0.7')
+  .version('2.0.8')
   .description('AI Chatbot CLI')
   .option('-f, --file', 'Ask questions from a file')
   .option('-s, --session', 'Start a new session')
+  .option('--reset-key', 'Reset your saved API key')
   .action(async () => {
     console.log(chalk.greenBright('😊 Welcome to AI Chatbot CLI!'));
 
+    const options = program.opts();
+
     // Ensure API key is available
-    const apiKey = await getApiKey();
+    const apiKey = await getApiKey(options.resetKey);
 
     // You can now use `apiKey` in your chatbot
-    const options = program.opts();
     if (options.session && options.file) {
       const filePath = await handleSession(options.session);
       await handleQuestionLoop(filePath, true, apiKey);
